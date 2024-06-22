@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.slick-dots li.slick-active div {
+  background-color: #4a4a4a; 
+  border: none; 
+}
+
+.slick-dots li div {
+  background-color: transparent; 
+}
