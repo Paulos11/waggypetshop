@@ -1,4 +1,3 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -8,11 +7,15 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
-import ProductDetails from './components/ProductDetails'; 
+import ProductDetails from './components/ProductDetails';
 import PrivateRoute from './components/PrivateRoute';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Auth from './pages/Auth';
+import CartPage from './components/Products/CartPage';
+import WishlistPage from './components/Products/WishlistPage';
+import Footer from './components/Footer';
+import Checkout from './components/Products/Checkout';
 
 const Shop = () => <div>Shop Page</div>;
 const Blog = () => <div>Blog Page</div>;
@@ -37,8 +40,12 @@ const App = () => {
         <Route path="/others" element={<Others />} />
         <Route path="/category" element={<Category />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/product/:id" element={<ProductDetails />} /> 
+        <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/checkout" element={<Checkout />} />
       </Routes>
+      <Footer />
       <ToastContainer />
     </Router>
   );

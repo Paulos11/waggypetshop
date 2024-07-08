@@ -1,14 +1,30 @@
-// src/components/ProductCard.jsx
 import React from 'react';
+import { useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { addToCart } from '../features/cartActions';
+import { addToWishlist } from '../features/wishlistActions';
+import { FaHeart, FaShoppingCart } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 const ProductCard = ({ product }) => {
+  const dispatch = useDispatch();
+
   const imageUrl = product.images && product.images.length > 0 
     ? `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/uploads/${product.images[0]}` 
     : 'https://via.placeholder.com/150';
 
+  const handleAddToCart = () => {
+    dispatch(addToCart({ productId: product._id, quantity: 1 }));
+    toast.success(`${product.name} added to cart!`);
+  };
+
+  const handleAddToWishlist = () => {
+    dispatch(addToWishlist(product._id));
+    toast.success(`${product.name} added to wishlist!`);
+  };
+
   return (
-    <div className="rounded-lg overflow-hidden bg-white p-4">
+    <div className="rounded-lg overflow-hidden p-4 ">
       <div className="relative">
         <Link to={`/product/${product._id}`}>
           <img src={imageUrl} alt={product.name} className="w-full h-64 object-cover rounded-t-lg" />
@@ -24,11 +40,12 @@ const ProductCard = ({ product }) => {
         </div>
         <p className="text-lg text-[#e2a61f] mb-4">${product.price}</p>
         <div className="flex space-x-2">
-          <button className="flex-1 py-2 border border-[#4a4a4a] text-[#4a4a4a] font-Chilanka text-lg hover:bg-gray-100">ADD TO CART</button>
-          <button className="flex-0 py-2 px-4 border border-[#4a4a4a] text-[#4a4a4a] hover:bg-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+          <button onClick={handleAddToCart} className="flex-1 py-2 border border-[#4a4a4a] text-[#4a4a4a] font-Chilanka text-lg hover:bg-gray-100 flex items-center justify-center">
+            <FaShoppingCart className="mr-2" />
+            ADD TO CART
+          </button>
+          <button onClick={handleAddToWishlist} className="flex-0 py-2 px-4 border border-[#4a4a4a] text-[#4a4a4a] hover:bg-gray-100 flex items-center justify-center">
+            <FaHeart />
           </button>
         </div>
       </div>

@@ -25,7 +25,7 @@ const HomeSlider = () => {
   };
 
   return (
-    <div className="relative bg-[#fdf3e4]">
+    <div className="relative bg-[#fdf3e4] z-[-1]">
       <Slider {...settings} >
         <div>
           <HomeHeaderContent imgSrc="https://demo.templatesjungle.com/waggy/images/banner-img.png" />

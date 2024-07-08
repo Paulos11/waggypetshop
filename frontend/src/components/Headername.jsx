@@ -1,4 +1,3 @@
-// src/components/Headername.jsx
 import React from 'react';
 
 const Headername = ({ title }) => {

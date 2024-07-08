@@ -7,5 +7,9 @@ export default defineConfig({
     alias: {
       '@': '/src'
     }
-  }
+  },server: {
+    proxy: {
+      '/api': 'http://localhost:4002', 
+    },
+  },
 });

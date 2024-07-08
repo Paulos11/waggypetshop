@@ -5,22 +5,30 @@ import { MdPerson, MdFavorite, MdShoppingCart, MdMenu } from 'react-icons/md';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../features/auth/authSlice';
 import { fetchCategories } from '../features/category/categorySlice';
+import { getWishlist } from '../features/wishlistActions';
+import { getCart, removeFromCart } from '../features/cartActions';
 
 const Navbar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchSidebar, setSearchSidebar] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(null); 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const { categories, status, error } = useSelector((state) => state.category);
   const { user } = useSelector((state) => state.auth);
+  const wishlist = useSelector((state) => state.wishlist);
+  const cart = useSelector((state) => state.cart);
 
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchCategories());
     }
-  }, [status, dispatch]);
+    if (user) {
+      dispatch(getWishlist());
+      dispatch(getCart());
+    }
+  }, [status, dispatch, user]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -32,8 +40,8 @@ const Navbar = () => {
     setSidebarOpen(false);
   };
 
-  const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
+  const toggleDropdown = (dropdown) => {
+    setDropdownOpen(dropdownOpen === dropdown ? null : dropdown); 
   };
 
   const handleAccountClick = () => {
@@ -48,9 +56,13 @@ const Navbar = () => {
     dispatch(logout());
   };
 
+  const handleRemoveFromCart = (productId) => {
+    dispatch(removeFromCart(productId));
+  };
+
   return (
     <>
-      <nav className="bg-white py-4 ">
+      <nav className="bg-white py-4">
         <div className="container mx-auto flex flex-wrap justify-between items-center">
           <div className="w-full text-center lg:w-auto lg:text-left">
             <Link to="/" className="text-black text-2xl">
@@ -79,29 +91,29 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-        <hr className="mt-7"></hr>
+        <hr className="mt-7" />
       </nav>
       <nav className="hidden lg:flex items-center min-h-[70px]">
         <div className="container mx-auto flex justify-between items-center">
           <div className="relative">
             <button
-              onClick={toggleDropdown}
+              onClick={() => toggleDropdown('category')}
               className="text-black text-lg"
               style={{ fontFamily: 'Chilanka, cursive' }}
             >
               Shop by Category <span className="text-sm">▼</span>
             </button>
-            {dropdownOpen && (
+            {dropdownOpen === 'category' && (
               <div className="absolute mt-2 py-2 w-48 bg-white border rounded shadow-xl">
-                {categories && categories.map((category) => (
-                  <Link
-                    key={category.id}
-                    to={`/category/${category.slug}`}
-                    className="block px-4 py-2 text-black hover:bg-gray-200"
-                  >
-                    {category.name}
-                  </Link>
-                ))}
+             {categories && categories.map((category) => (
+  <Link
+    key={category.id} 
+    to={`/category/${category.slug}`}
+    className="block px-4 py-2 text-black hover:bg-gray-200"
+  >
+    {category.name}
+  </Link>
+))}
               </div>
             )}
           </div>
@@ -116,16 +128,72 @@ const Navbar = () => {
             <Link to="/others" className="text-black text-[16px]" style={{ fontFamily: 'Chilanka, cursive' }}>Others</Link>
             <Link to="/get-pro" className="text-black text-[16px] font-bold" style={{ fontFamily: 'Chilanka, cursive' }}>GET PRO</Link>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 relative">
             <MdPerson className="text-black text-2xl cursor-pointer" onClick={handleAccountClick} />
             {user ? (
-              <button onClick={handleLogout} className="text-black text-2xl">Logout</button>
+              <>
+                <Link to="/wishlist">
+                  <MdFavorite className="text-black text-2xl" />
+                  <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs px-1">{wishlist.products.length}</span>
+                </Link>
+                <div className="relative">
+                  <MdShoppingCart className="text-black text-2xl cursor-pointer" onClick={() => toggleDropdown('cart')} />
+                  <span className="absolute top-0 right-0 bg-yellow-500 text-white rounded-full text-xs px-1">{cart.items.length}</span>
+                  {dropdownOpen === 'cart' && (
+                    <div className="absolute right-0 mt-2 py-2 w-64 bg-white border rounded shadow-xl">
+                      {cart.items.length === 0 ? (
+                        <p className="text-center p-4">Your cart is empty</p>
+                      ) : (
+                        <div>
+                          {cart.items.map((item) => (
+                            <div key={item.productId._id} className="flex justify-between items-center p-2 border-b">
+                              <div>
+                                <p className="font-Chilanka text-sm text-gray-800">{item.productId.name}</p>
+                                <p className="text-sm text-[#e2a61f]">${item.productId.price}</p>
+                                <p className="text-sm">Quantity: {item.quantity}</p>
+                              </div>
+                              <button onClick={() => handleRemoveFromCart(item.productId._id)} className="py-1 px-2 border border-[#4a4a4a] text-[#4a4a4a] hover:bg-gray-100">Remove</button>
+                            </div>
+                          ))}
+                          <div className="p-2">
+                            <Link to="/checkout" className="block text-center py-2 bg-[#4a4a4a] text-white rounded hover:bg-gray-700">Go to Checkout</Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <button onClick={handleLogout} className="text-black text-2xl">Logout</button>
+              </>
             ) : (
               <>
                 <MdFavorite className="text-black text-2xl" />
                 <div className="relative">
-                  <MdShoppingCart className="text-black text-2xl" />
-                  <span className="absolute top-0 right-0 bg-yellow-500 text-white rounded-full text-xs px-1">03</span>
+                  <MdShoppingCart className="text-black text-2xl cursor-pointer" onClick={() => toggleDropdown('cart')} />
+                  <span className="absolute top-0 right-0 bg-yellow-500 text-white rounded-full text-xs px-1">{cart.items.length}</span>
+                  {dropdownOpen === 'cart' && (
+                    <div className="absolute right-0 mt-2 py-2 w-64 bg-white border rounded shadow-xl">
+                      {cart.items.length === 0 ? (
+                        <p className="text-center p-4">Your cart is empty</p>
+                      ) : (
+                        <div>
+                          {cart.items.map((item) => (
+                            <div key={item.productId._id} className="flex justify-between items-center p-2 border-b">
+                              <div>
+                                <p className="font-Chilanka text-sm text-gray-800">{item.productId.name}</p>
+                                <p className="text-sm text-[#e2a61f]">${item.productId.price}</p>
+                                <p className="text-sm">Quantity: {item.quantity}</p>
+                              </div>
+                              <button onClick={() => handleRemoveFromCart(item.productId._id)} className="py-1 px-2 border border-[#4a4a4a] text-[#4a4a4a] hover:bg-gray-100">Remove</button>
+                            </div>
+                          ))}
+                          <div className="p-2">
+                            <Link to="/checkout" className="block text-center py-2 bg-[#4a4a4a] text-white rounded hover:bg-gray-700">Go to Checkout</Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -137,13 +205,69 @@ const Navbar = () => {
           <div className="flex space-x-4">
             <MdPerson className="text-black text-2xl cursor-pointer" onClick={handleAccountClick} />
             {user ? (
-              <button onClick={handleLogout} className="text-black text-2xl">Logout</button>
+              <>
+                <Link to="/wishlist">
+                  <MdFavorite className="text-black text-2xl" />
+                  <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs px-1">{wishlist.products.length}</span>
+                </Link>
+                <div className="relative">
+                  <MdShoppingCart className="text-black text-2xl cursor-pointer" onClick={() => toggleDropdown('cart')} />
+                  <span className="absolute top-0 right-0 bg-yellow-500 text-white rounded-full text-xs px-1">{cart.items.length}</span>
+                  {dropdownOpen === 'cart' && (
+                    <div className="absolute right-0 mt-2 py-2 w-64 bg-white border rounded shadow-xl">
+                      {cart.items.length === 0 ? (
+                        <p className="text-center p-4">Your cart is empty</p>
+                      ) : (
+                        <div>
+                          {cart.items.map((item) => (
+                            <div key={item.productId._id} className="flex justify-between items-center p-2 border-b">
+                              <div>
+                                <p className="font-Chilanka text-sm text-gray-800">{item.productId.name}</p>
+                                <p className="text-sm text-[#e2a61f]">${item.productId.price}</p>
+                                <p className="text-sm">Quantity: {item.quantity}</p>
+                              </div>
+                              <button onClick={() => handleRemoveFromCart(item.productId._id)} className="py-1 px-2 border border-[#4a4a4a] text-[#4a4a4a] hover:bg-gray-100">Remove</button>
+                            </div>
+                          ))}
+                          <div className="p-2">
+                            <Link to="/checkout" className="block text-center py-2 bg-[#4a4a4a] text-white rounded hover:bg-gray-700">Go to Checkout</Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <button onClick={handleLogout} className="text-black text-2xl">Logout</button>
+              </>
             ) : (
               <>
                 <MdFavorite className="text-black text-2xl" />
                 <div className="relative">
-                  <MdShoppingCart className="text-black text-2xl" />
-                  <span className="absolute top-0 right-0 bg-yellow-500 text-white rounded-full text-xs px-1">03</span>
+                  <MdShoppingCart className="text-black text-2xl cursor-pointer" onClick={() => toggleDropdown('cart')} />
+                  <span className="absolute top-0 right-0 bg-yellow-500 text-white rounded-full text-xs px-1">{cart.items.length}</span>
+                  {dropdownOpen === 'cart' && (
+                    <div className="absolute right-0 mt-2 py-2 w-64 bg-white border rounded shadow-xl">
+                      {cart.items.length === 0 ? (
+                        <p className="text-center p-4">Your cart is empty</p>
+                      ) : (
+                        <div>
+                          {cart.items.map((item) => (
+                            <div key={item.productId._id} className="flex justify-between items-center p-2 border-b">
+                              <div>
+                                <p className="font-Chilanka text-sm text-gray-800">{item.productId.name}</p>
+                                <p className="text-sm text-[#e2a61f]">${item.productId.price}</p>
+                                <p className="text-sm">Quantity: {item.quantity}</p>
+                              </div>
+                              <button onClick={() => handleRemoveFromCart(item.productId._id)} className="py-1 px-2 border border-[#4a4a4a] text-[#4a4a4a] hover:bg-gray-100">Remove</button>
+                            </div>
+                          ))}
+                          <div className="p-2">
+                            <Link to="/checkout" className="block text-center py-2 bg-[#4a4a4a] text-white rounded hover:bg-gray-700">Go to Checkout</Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </>
             )}

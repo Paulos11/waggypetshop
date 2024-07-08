@@ -4,6 +4,7 @@ const dbConnection = require('./config/db');
 const routes = require("./routes/index");
 const cors = require('cors');
 const path = require("path");
+const session = require('express-session');
 
 const app = express();
 const PORT = process.env.PORT || 4002;
@@ -16,7 +17,12 @@ app.use(cors({
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 }));
-
+app.use(session({
+  secret: 'your_secret_key',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false } 
+}));
 app.use("/api", routes);
 
 app.listen(PORT, () => {
