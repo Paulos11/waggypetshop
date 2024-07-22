@@ -1,56 +1,54 @@
-const Category = require("../../models/categorySchema");
-const { errorHandler } = require("../../lib/index");
+const Category = require('../../models/category.mode');
+const { errorHandle } = require('@/lib');
 
-class CategoryController {
+class CategoryCtrl {
   index = async (req, res, next) => {
     try {
+      console.log('Fetching all categories'); 
       const categories = await Category.find();
       res.json(categories);
     } catch (error) {
-      errorHandler(error, req, res, next);
+      console.error('Error fetching categories:', error); 
+      errorHandle(error, req, res, next);
     }
   };
 
   store = async (req, res, next) => {
     try {
       const category = await Category.create(req.body);
-      res.status(201).json({ message: "Category added successfully" });
+      res.status(201).json({ message: 'Category added successfully', category });
     } catch (error) {
-      errorHandler(error, req, res, next);
+      errorHandle(error, req, res, next);
     }
   };
 
   show = async (req, res, next) => {
     try {
+      console.log('Fetching category with ID:', req.params.id); 
       const category = await Category.findById(req.params.id);
       if (!category) {
-        return res.status(404).json({ message: "Category not found" });
+        console.log('Category not found:', req.params.id); 
+        return res.status(404).json({ message: 'Category not found' });
       }
       res.json(category);
     } catch (error) {
-      errorHandler(error, req, res, next);
+      console.error('Error fetching category:', error); 
+      errorHandle(error, req, res, next);
     }
   };
 
   update = async (req, res, next) => {
     try {
-      const updatedCategory = await Category.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        {
-          new: true,
-          runValidators: true,
-        }
-      );
-      if (!updatedCategory) {
-        return res.status(404).json({ message: "Category not found" });
-      }
-      res.json({
-        message: "Category updated successfully",
-        category: updatedCategory,
+      const updatedCategory = await Category.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
       });
+      if (!updatedCategory) {
+        return res.status(404).json({ message: 'Category not found' });
+      }
+      res.json({ message: 'Category updated successfully', category: updatedCategory });
     } catch (error) {
-      errorHandler(error, req, res, next);
+      errorHandle(error, req, res, next);
     }
   };
 
@@ -58,13 +56,13 @@ class CategoryController {
     try {
       const category = await Category.findByIdAndDelete(req.params.id);
       if (!category) {
-        return res.status(404).json({ message: "Category not found" });
+        return res.status(404).json({ message: 'Category not found' });
       }
-      res.json({ message: "Category deleted successfully" });
+      res.json({ message: 'Category deleted successfully' });
     } catch (error) {
-      errorHandler(error, req, res, next);
+      errorHandle(error, req, res, next);
     }
   };
 }
 
-module.exports = new CategoryController();
+module.exports = new CategoryCtrl();

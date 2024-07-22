@@ -1,16 +1,28 @@
-const express = require('express');
+const express = require("express");
+const AuthRoutes = require("./auth");
+const ProfileRoutes = require("./profile");
+const CmsRoutes = require("./Cms");
+const FrontRoutes = require("./front");
+const { auth, cmsAcces } = require("@/lib");
+const ProductsRoutes = require("./front/productRoutes");
+const OrderRoutes = require("./front/orderRoutes");
+const MiscRoutes = require("./front/miscRoutes");
+const ProductForAllRoutes = require("./Cms/productsforall");
+const forAll = require("./Cms/productsforall");
+const ReviewsRoutes = require('./Cms/reviewsRouter')
 const router = express.Router();
 
-const AuthRoutes = require('./Auth/authRoutes');
-const CategoryRoutes = require('./cms/categoryRoutes');
-const ProductRoutes = require('./cms/productRouter');
-const CartRoutes = require('./cartRoutes');
-const WishlistRoutes = require('./wishlistRoutes');
+router.use("/auth", AuthRoutes);
+router.use("/profile", auth, ProfileRoutes);
+router.use("/cms", auth, cmsAcces, CmsRoutes);
 
-router.use('/auth', AuthRoutes);
-router.use('/cms/category', CategoryRoutes);
-router.use('/cms/product', ProductRoutes);
-router.use('/cart', CartRoutes);  
-router.use('/wishlist', WishlistRoutes);
+router.use("/cms/", ProductForAllRoutes);
+
+router.use("/products", ProductsRoutes);
+router.use("/products", FrontRoutes);
+
+router.use('/orders', OrderRoutes)
+router.use("/", ProductForAllRoutes);
+router.use("/", ReviewsRoutes);
 
 module.exports = router;

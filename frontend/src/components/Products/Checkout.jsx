@@ -1,43 +1,121 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
-import { clearCart, removeFromCart } from '../../features/cartActions';
+import { clearCart } from '../../features/front/cartSlice';
+import { createOrder } from '../../features/front/orderSlice';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 
 const Checkout = () => {
+  const cartItems = useSelector(state => state.cart.items);
+  const user = useSelector(state => state.auth.user);
   const dispatch = useDispatch();
-  const cart = useSelector((state) => state.cart);
+  const navigate = useNavigate();
 
-  const handleClearCart = () => {
-    dispatch(clearCart());
-    toast.success('Cart cleared');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
+  });
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  if (!cart.items || cart.items.length === 0) {
-    return <div className="container mx-auto py-12 px-6 lg:px-24 text-center text-gray-800">Your cart is empty</div>;
-  }
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+
+    const token = localStorage.getItem('token') || Cookies.get('token');
+
+    if (!user || !token) {
+      toast.error('You must be logged in to place an order.');
+      navigate('/auth', { state: { from: '/checkout' } });
+      return;
+    }
+
+    try {
+      const orderData = {
+        userId: user._id,
+        products: cartItems.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity
+        })),
+        shippingDetails: formData
+      };
+
+      const resultAction = await dispatch(createOrder(orderData));
+      if (createOrder.fulfilled.match(resultAction)) {
+        dispatch(clearCart());
+        toast.success('Order placed successfully!');
+        navigate('/order-confirmation', { state: { orderId: resultAction.payload._id } });
+      } else {
+        if (resultAction.payload === 'You must be logged in to place an order.') {
+          navigate('/auth', { state: { from: '/checkout' } });
+        } else {
+          toast.error(resultAction.payload || 'Failed to place order. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('Checkout failed:', error);
+      toast.error('There was an error processing your order. Please try again.');
+    }
+  };
+
+  const total = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
 
   return (
     <div className="container mx-auto py-12 px-6 lg:px-24">
-      <h2 className="text-3xl font-Chilanka text-center text-gray-800 mb-8">Checkout</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          {cart.items.map((item, index) => (
-            <div key={index} className="flex justify-between items-center p-4 border-b">
-              <div>
-                <p className="font-Chilanka text-sm text-gray-800">{item.productId.name}</p>
-                <p className="text-sm text-[#e2a61f]">${item.productId.price}</p>
-                <p className="text-sm">Quantity: {item.quantity}</p>
-              </div>
-              <button onClick={() => dispatch(removeFromCart(item.productId._id))} className="py-1 px-2 border border-[#4a4a4a] text-[#4a4a4a] hover:bg-gray-100">Remove</button>
+      <h2 className="text-3xl font-semibold mb-6" style={{ fontFamily: 'Chilanka, cursive' }}>Checkout</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div>
+          <h3 className="text-xl font-semibold mb-4" style={{ fontFamily: 'Chilanka, cursive' }}>Order Summary</h3>
+          {cartItems.map(item => (
+            <div key={item.productId} className="flex justify-between mb-2">
+              <span>{item.name} x {item.quantity}</span>
+              <span>${(item.price * item.quantity).toFixed(2)}</span>
             </div>
           ))}
+          <div className="border-t mt-4 pt-4">
+            <div className="flex justify-between font-semibold">
+              <span>Total</span>
+              <span>${total.toFixed(2)}</span>
+            </div>
+          </div>
         </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-xl font-Chilanka text-gray-800 mb-4">Order Summary</h3>
-          <p className="text-sm text-gray-600 mb-2">Items: {cart.items.length}</p>
-          <p className="text-sm text-gray-600 mb-4">Total: ${cart.items.reduce((acc, item) => acc + item.productId.price * item.quantity, 0).toFixed(2)}</p>
-          <button onClick={handleClearCart} className="w-full py-2 bg-[#DEAD6F] text-white rounded hover:bg-[#DEAD6F]">Clear Cart</button>
+        <div>
+          <h3 className="text-xl font-semibold mb-4" style={{ fontFamily: 'Chilanka, cursive' }}>Shipping Information</h3>
+          <form onSubmit={handleCheckout}>
+            <div className="mb-4">
+              <label className="block mb-2">Name</label>
+              <input type="text" name="name" value={formData.name} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded" />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2">Email</label>
+              <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded" />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2">Address</label>
+              <input type="text" name="address" value={formData.address} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded" />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2">City</label>
+              <input type="text" name="city" value={formData.city} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded" />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2">Postal Code</label>
+              <input type="text" name="postalCode" value={formData.postalCode} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded" />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2">Country</label>
+              <input type="text" name="country" value={formData.country} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded" />
+            </div>
+            <button type="submit" className="w-full bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600 transition duration-300">
+              Place Order
+            </button>
+          </form>
         </div>
       </div>
     </div>

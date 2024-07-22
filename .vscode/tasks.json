@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+    {
+      "type": "npm",
+      "script": "start",
+      "path": "api",
+      "problemMatcher": [],
+      "label": "npm: dev - api",
+      "detail": "nodemon index.js"
+    },
+    {
+      "type": "npm",
+      "script": "prod",
+      "path": "api",
+      "problemMatcher": [],
+      "label": "npm: prod - api",
+      "detail": "nodemon index.js"
+    }
+  ]
+}

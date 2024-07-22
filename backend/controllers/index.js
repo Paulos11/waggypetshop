@@ -1,3 +1,5 @@
-const AuthCtrl = require('./Auth/userController')
-const CtgrCtrl =  require('./categoryController')
-module.exports = {AuthCtrl,CtgrCtrl}
+const Auth = require("./auth");
+const Cms = require("./cms");
+const Front = require("./front");
+
+module.exports = { Auth, Cms, Front };
